@@ -507,11 +507,13 @@ def group_output(blks, lines, im_w, im_h, mask=None, sort_blklist=True) -> List[
             
     return final_blk_list
 
-def visualize_textblocks(canvas, blk_list:  List[TextBlock]):
+def visualize_textblocks(canvas, blk_list:  List[TextBlock], path = '../output/'):
     lw = max(round(sum(canvas.shape) / 2 * 0.003), 2)  # line width
     for ii, blk in enumerate(blk_list):
         bx1, by1, bx2, by2 = blk.xyxy
         cv2.rectangle(canvas, (bx1, by1), (bx2, by2), (127, 255, 127), lw)
+        cut_img = canvas[by1:by2, bx1:bx2]
+        cv2.imwrite(path + f'/cut_image_{ii}.png', cut_img)
         lines = blk.lines_array(dtype=np.int32)
         for jj, line in enumerate(lines):
             cv2.putText(canvas, str(jj), line[0], cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255,127,0), 1)

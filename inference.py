@@ -16,12 +16,18 @@ from utils.textmask import refine_mask, refine_undetected_mask, REFINEMASK_INPAI
 from pathlib import Path
 from typing import Union
 
-def model2annotations(model_path, img_dir_list, save_dir, save_json=False):
-    if isinstance(img_dir_list, str):
-        img_dir_list = [img_dir_list]
+def init_model(model_path, device):
     cuda = torch.cuda.is_available()
     device = 'cuda' if cuda else 'cpu'
     model = TextDetector(model_path=model_path, input_size=1024, device=device, act='leaky')  
+    return model
+
+def model2annotations(img_dir_list, save_dir, save_json=False, model=None):
+    if isinstance(img_dir_list, str):
+        img_dir_list = [img_dir_list]
+    # cuda = torch.cuda.is_available()
+    # device = 'cuda' if cuda else 'cpu'
+    # model = TextDetector(model_path=model_path, input_size=1024, device=device, act='leaky')  
     imglist = []
     for img_dir in img_dir_list:
         imglist += find_all_imgs(img_dir, abs_path=True)
@@ -193,17 +199,23 @@ def traverse_by_dict(img_dir_list, dict_dir):
         img = cv2.imread(img_path)
         mask = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
         mask = refine_mask(img, mask, blk_list)
+        
 
-        visualize_textblocks(img, blk_list)
-        cv2.imshow('im', img)
-        cv2.imshow('mask', mask)
-        cv2.waitKey(0)
+        visualize_textblocks(img, blk_list, path=dict_dir)
+        #cv2.imshow('im', img)
+        #cv2.imshow('mask', mask)
+        cv2.imwrite(f'{dict_dir}/labeled.png', img)
+        #cv2.imwrite('mask.png', mask)
+        #cv2.waitKey(0)
+        return len(blk_list)
 
 if __name__ == '__main__':
     device = 'cpu'
-    model_path = 'data/comictextdetector.pt'
+    
+    #model_path = 'data/comictextdetector.pt'
     model_path = 'data/comictextdetector.pt.onnx'
-    img_dir = r'data/examples'
-    save_dir = r'data/backup'
+    
+    img_dir = r'../input'
+    save_dir = r'../output'
     model2annotations(model_path, img_dir, save_dir, save_json=True)
     traverse_by_dict(img_dir, save_dir)
